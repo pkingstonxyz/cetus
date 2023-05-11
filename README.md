@@ -1,36 +1,32 @@
 # cetus
 
-FIXME: description
+cetus is a website for Classics students (primarily students of greek) designed with 2 goals in mind:
 
-## Installation
-
-Download from http://example.com/FIXME.
+1. Make perseus easier to use and navigate
+2. Add learning tools that are useful for greek students from the beginner level all the way up to advanced.
 
 ## Usage
 
-FIXME: explanation
+TODO
 
-    $ java -jar cetus-0.1.0-standalone.jar [args]
+## Bugs
 
-## Options
+If you have a bug report or feature request, please just open an issue.
 
-FIXME: listing of options this app accepts.
 
-## Examples
+---
 
-...
+## Tech stack
 
-### Bugs
+Abandon all hope, ye who enter here.
 
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
+If you're interested in the nitty-gritty details of how cetus works, read on. 
+This section is highly subject to change depending on the direction that cetus 
+ends up taking during development.
 
 ## License
 
-Copyright © 2023 FIXME
+Copyright © 2023 Patrick Kingston
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License 2.0 which is available at
@@ -42,4 +38,5 @@ Public License, v. 2.0 are satisfied: GNU General Public License as published by
 the Free Software Foundation, either version 2 of the License, or (at your
 option) any later version, with the GNU Classpath Exception which is available
 at https://www.gnu.org/software/classpath/license.html.
+
 # cetus
