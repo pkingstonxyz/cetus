@@ -12,7 +12,9 @@
             [reitit.ring.middleware.parameters :as parameters]
             [ring.adapter.jetty :as jetty]
             [muuntaja.core :as m]
-            [malli.util :as mu]))
+            [malli.util :as mu]
+            ;;Component
+            [com.stuartsierra.component :as component]))
 
 (def app
   (ring/ring-handler
@@ -106,7 +108,17 @@
                   :operationsSorter "alpha"}})
       (ring/create-default-handler))))
 
-(defn start! []
-  (jetty/run-jetty #'app {:port 3000, :join? false})
-  (println "server running in port 3000"))
+;;Component
+(defrecord Server [port]
+  component/Lifecycle
+  (start [component]
+    (let [server (jetty/run-jetty #'app {:port port :join? false})]
+      ;(println "Starting server on port " port)
+      (assoc component :server server)))
+  (stop [component]
+    (.stop (:server component))
+    (println "Stopped server on port " port)
+    (dissoc component :server)))
 
+(defn new-server [port]
+  (map->Server {:port port}))
