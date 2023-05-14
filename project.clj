@@ -9,10 +9,14 @@
                  ;;Server + routing
                  [ring/ring-jetty-adapter "1.7.1"]
                  [metosin/reitit "0.7.0-alpha3"]
-                 [metosin/ring-swagger-ui "5.0.0-alpha.0"]]
+                 [metosin/ring-swagger-ui "5.0.0-alpha.0"]
+                 ;;Database
+                 [datalevin "0.8.16"]]
   :main ^:skip-aot cetus.core
   :target-path "target/%s"
   :repl-options {:init-ns cetus.server}
+  :jvm-opts ["--add-opens=java.base/java.nio=ALL-UNNAMED"
+             "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED"]
   :profiles {:dev {:dependencies [[ring/ring-mock "0.3.2"]]}
              :uberjar {:aot :all
                        :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
