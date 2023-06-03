@@ -1,5 +1,5 @@
 (ns cetus.dock.server
-  (:require [aleph.http :as aleph]
+  (:require [org.httpkit.server :as http]
 
             [muuntaja.core :as m]
             [reitit.ring :as ring]
@@ -9,32 +9,18 @@
             [reitit.ring.middleware.parameters :as parameters]
             [ring.logger :as logger]
 
-            [manifold.deferred :as d]
-            [manifold.stream :as s]
             [clojure.core.async :as a]))
 
-(defn hello-world-handler
-  [req]
-  {:status 200
-   :headers {"content-type" "text/plain"}
-   :body "hello world!"})
 
-(defn delayed-hello-world-handler
-  [req]
-  (s/take!
-    (s/->source
-      (a/go
-        (let [_ (a/<! (a/timeout 1000))]
-          (hello-world-handler req))))))
+(def clients_ (atom #{})) 
 
-(defn streaming-numbers-handler
-  [{:keys [params]}]
-  (let [cnt (Integer/parseInt (get params "count" "0"))]
-    {:status 200
-     :headers {"content-type" "text/plain"}
-     :body (let [sent (atom 0)]
-             (->> (s/periodically 100 #(str (swap! sent inc) "\n"))
-                  (s/transform (take cnt))))}))
+(defn my-async-handler 
+  [ring-req] 
+  (http/as-channel 
+    ring-req 
+    {:on-open (fn [ch] (println "added") (swap! clients_ conj ch))
+     :on-close (fn [ch status] (println "got rid of") (swap! clients_ disj ch))}))
+
 
 (def handler
   (ring/ring-handler
@@ -45,9 +31,20 @@
       ;                 :handler    (fn [{{{:keys [x y]} :query} :parameters}]
       ;                               {:status 200
       ;                                :body   {:total (+ x y)}})}}]
-      [["/hello"        {:get {:handler hello-world-handler}}]
-       ["/hellodelayed" {:get {:handler delayed-hello-world-handler}}]
-       ["/numbers" {:get {:handler streaming-numbers-handler}}]]
+      [["/hello" {:get {:handler (fn [_] 
+                                   {:status 200
+                                    :headers {"content-type" "text/html"}
+                                    :body "hello"})}}]
+       ["/async" {:get {:handler my-async-handler}}]
+       ["/send" {:get {:handler (fn [req]
+                                  (doseq [ch @clients_] 
+                                    (swap! clients_ disj ch) 
+                                    (http/send! ch {:status 200 
+                                                    :headers {"Content-Type" "text/html"} 
+                                                    :body "Your async response"}))
+                                  {:status 200
+                                   :headers {"content-type" "text/html"}
+                                   :body "send"})}}]]
       ;; router data affecting all routes
       {:data {:coercion   reitit.coercion.spec/coercion
               :muuntaja   m/instance
@@ -58,7 +55,7 @@
 
 
 (defn start! []
-  (aleph/start-server (logger/wrap-with-logger handler) {:port 8080}))
+  (http/run-server (logger/wrap-with-logger handler) {:port 8080}))
 
 (defn stop! [server] 
-  (.close server))
+  (server :timeout 1000))
