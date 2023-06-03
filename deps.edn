@@ -1,0 +1,9 @@
+{:paths [:clj-paths :resource-paths] 
+ :aliases {:clj-paths ["src" "test"]
+           :resource-paths ["resources"]
+           :test {:main-opts ["-m" "cetus.test"]}
+           :run  {:main-opts ["-m" "cetus.core"]}}
+ :deps {aleph/aleph             {:mvn/version "0.6.2"}
+        metosin/reitit          {:mvn/version "0.7.0-alpha4"}
+        ring-logger/ring-logger {:mvn/version "1.1.1"}
+        org.clojure/core.async  {:mvn/version "1.6.673"}}}
