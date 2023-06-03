@@ -63,6 +63,15 @@
   
   (println "Spaceship landed!"))
 
+(defn redock! []
+  (println "Redocking spaceship...")
+  (swap! spaceship assoc :dock (server/restart! (:dock @spaceship)))
+  (println "Spaceship redocked!"))
+
 (defn -main [& _]
   (launch!)
   (println @spaceship))
+
+(comment
+  (launch!)
+  (redock!))

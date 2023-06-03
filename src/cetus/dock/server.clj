@@ -12,14 +12,18 @@
             [clojure.core.async :as a]))
 
 
-(def clients_ (atom #{})) 
-
 (defn my-async-handler 
   [ring-req] 
   (http/as-channel 
     ring-req 
-    {:on-open (fn [ch] (println "added") (swap! clients_ conj ch))
-     :on-close (fn [ch status] (println "got rid of") (swap! clients_ disj ch))}))
+    {:on-open 
+     (fn [ch] 
+       (println "Opened async") 
+       (a/go
+         (let [_ (a/<! (a/timeout 5000))]
+           (http/send! ch {:status 200 
+                           :headers {"Content-Type" "text/html"} 
+                           :body "Your async response"}))))}))
 
 
 (def handler
@@ -34,17 +38,8 @@
       [["/hello" {:get {:handler (fn [_] 
                                    {:status 200
                                     :headers {"content-type" "text/html"}
-                                    :body "hello"})}}]
-       ["/async" {:get {:handler my-async-handler}}]
-       ["/send" {:get {:handler (fn [req]
-                                  (doseq [ch @clients_] 
-                                    (swap! clients_ disj ch) 
-                                    (http/send! ch {:status 200 
-                                                    :headers {"Content-Type" "text/html"} 
-                                                    :body "Your async response"}))
-                                  {:status 200
-                                   :headers {"content-type" "text/html"}
-                                   :body "send"})}}]]
+                                    :body "hello, bruh"})}}]
+       ["/async" {:get {:handler my-async-handler}}]]
       ;; router data affecting all routes
       {:data {:coercion   reitit.coercion.spec/coercion
               :muuntaja   m/instance
@@ -55,7 +50,14 @@
 
 
 (defn start! []
-  (http/run-server (logger/wrap-with-logger handler) {:port 8080}))
+  (http/run-server (logger/wrap-with-logger 
+                     handler
+                     ;TODO: add log-fn with mulog
+                     ) {:port 8080}))
 
 (defn stop! [server] 
   (server :timeout 1000))
+
+(defn restart! [server]
+  (stop! server)
+  (start!))
