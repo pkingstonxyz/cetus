@@ -4,7 +4,9 @@
             [cetus.ports.userdb :as user-db]
             [cetus.pods.texts :as texts]
             [cetus.pods.users :as users]
-            [cetus.dock.server :as server]))
+            [cetus.dock.server :as server]
+            [cetus.ports.loggercli :as logger]
+            [com.brunobonacci.mulog :as mu]))
 
 (def spaceship (atom {:ports {}
                       :pods  {}}))
@@ -27,14 +29,17 @@
 ; not shortened
 (defn launch! []
   (println "Launching spaceship...")
+  ;;Logging port
+  (swap! spaceship assoc-in [:ports :loggercli] (logger/start!))
+
   ;;texts pod
   (swap! spaceship assoc-in [:ports :text-db]  (txt-db/start!))
   (swap! spaceship assoc-in [:ports :text-api] (txt-api/start!))
   (swap! spaceship assoc-in [:pods  :texts]    (texts/start!))
 
   ;;users pod
-  (swap! spaceship assoc-in [:ports :user-db]  (user-db/start!))
-  (swap! spaceship assoc-in [:pods  :users]    (users/start!))
+  (swap! spaceship assoc-in [:ports :user-db] (user-db/start!))
+  (swap! spaceship assoc-in [:pods  :users]   (users/start!))
 
   ;;server
   (swap! spaceship assoc :dock (server/start!))
@@ -60,6 +65,10 @@
   (swap! spaceship update-in [:ports] dissoc :text-api)
   (txt-db/stop! (:text-db (:ports @spaceship)))
   (swap! spaceship update-in [:ports] dissoc :text-db)
+
+  ;;logger port
+  (logger/stop! (:loggercli (:ports @spaceship)))
+  (swap! spaceship update-in [:ports] dissoc :loggercli)
   
   (println "Spaceship landed!"))
 

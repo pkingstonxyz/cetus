@@ -8,6 +8,7 @@
             [reitit.ring.middleware.muuntaja :as muuntaja]
             [reitit.ring.middleware.parameters :as parameters]
             [ring.logger :as logger]
+            [com.brunobonacci.mulog :as mu]
 
             [clojure.core.async :as a]))
 
@@ -51,9 +52,15 @@
 
 (defn start! []
   (http/run-server (logger/wrap-with-logger 
-                     handler
-                     ;TODO: add log-fn with mulog
-                     ) {:port 8080}))
+                    handler
+                    {:log-fn
+                     (fn [f] 
+                       (mu/log (:ring.logger/type (:message f)) 
+                               :uri (:uri (:message f))
+                               :method (:request-method (:message f))
+                               :status (:status (:message f))
+                               :ms (:ring.logger/ms (:message f))))})
+                     {:port 8080}))
 
 (defn stop! [server] 
   (server :timeout 1000))
